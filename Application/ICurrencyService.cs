@@ -5,6 +5,5 @@ public interface ICurrencyService
 {
     Task<bool> AddCurrency(CurrencyRequest request);
     Task<object?> SearchByType(SearchRequest request);
-    
-    
+    Task<List<object>> GetAllCurrencies();
 }

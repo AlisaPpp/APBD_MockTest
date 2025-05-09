@@ -156,4 +156,54 @@ public class CurrencyService : ICurrencyService
         }
         return null;
     }
+    
+    public async Task<List<object>> GetAllCurrencies()
+    {
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        var getCurrenciesCmd = new SqlCommand("SELECT Id, Name, Rate FROM Currency", connection);
+        var reader = await getCurrenciesCmd.ExecuteReaderAsync();
+
+        var currencies = new List<(int Id, string Name, float Rate)>();
+        while (await reader.ReadAsync())
+        {
+            currencies.Add((
+                reader.GetInt32(0),
+                reader.GetString(1),
+                (float)reader.GetFloat(2)
+            ));
+        }
+        reader.Close();
+
+        var result = new List<object>();
+
+        foreach (var currency in currencies)
+        {
+            var getCountriesCmd = new SqlCommand(@"
+            SELECT c.Name 
+            FROM Country c 
+            JOIN Currency_Country cc ON c.Id = cc.Country_Id 
+            WHERE cc.Currency_Id = @CurrencyId", connection);
+            getCountriesCmd.Parameters.AddWithValue("@CurrencyId", currency.Id);
+
+            var countryReader = await getCountriesCmd.ExecuteReaderAsync();
+            var countries = new List<string>();
+            while (await countryReader.ReadAsync())
+            {
+                countries.Add(countryReader.GetString(0));
+            }
+            countryReader.Close();
+
+            result.Add(new
+            {
+                name = currency.Name,
+                rate = currency.Rate,
+                countries
+            });
+        }
+
+        return result;
+    }
+
 }

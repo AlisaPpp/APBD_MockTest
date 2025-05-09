@@ -2,7 +2,7 @@ using Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("Personaldatabase");
+var connectionString = builder.Configuration.GetConnectionString("PersonalDatabase");
 
 builder.Services.AddTransient<ICurrencyService, CurrencyService>(_ => new CurrencyService(connectionString));
 
@@ -43,6 +43,11 @@ app.MapGet("/api/search", async (string type, string name, ICurrencyService curr
     return Results.Ok(result);
 });
 
+app.MapGet("/api/currencies", async (ICurrencyService service) =>
+{
+    var result = await service.GetAllCurrencies();
+    return Results.Ok(result);
+});
 
 
 
